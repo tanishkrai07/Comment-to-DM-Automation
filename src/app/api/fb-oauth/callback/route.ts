@@ -79,7 +79,8 @@ export async function GET(req: NextRequest) {
       update: {
         pageName: fbPage.name,
         pageAccessTokenEncrypted: encryptedToken,
-        status: "active",
+        // Default to paused so user can manually opt-in via UI toggle
+        status: "paused",
         permissionsStatus: "ok",
       },
       create: {
@@ -87,7 +88,8 @@ export async function GET(req: NextRequest) {
         pageName: fbPage.name,
         pageAccessTokenEncrypted: encryptedToken,
         workspaceId: workspace.id,
-        status: "active",
+        // Default to paused so user can manually opt-in via UI toggle
+        status: "paused",
         permissionsStatus: "ok",
       },
     })
