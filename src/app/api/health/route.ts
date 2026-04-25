@@ -12,6 +12,8 @@ export async function GET() {
     "ENCRYPTION_KEY",
     "NEXTAUTH_SECRET",
     "NEXTAUTH_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   ]
 
   const missingEnv = requiredEnv.filter((key) => !process.env[key])

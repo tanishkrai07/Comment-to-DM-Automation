@@ -155,6 +155,8 @@ export default function SettingsPage() {
                 { key: "META_WEBHOOK_VERIFY_TOKEN", label: "Webhook Verify Token", desc: "Any secret string — must match what you enter in Meta App → Webhooks" },
                 { key: "ENCRYPTION_KEY", label: "Encryption Key (32 chars)", desc: "32-char random string for AES-256 encryption of page access tokens" },
                 { key: "NEXTAUTH_SECRET", label: "NextAuth Secret", desc: "Random string for NextAuth session signing (run: openssl rand -base64 32)" },
+                { key: "NEXT_PUBLIC_SUPABASE_URL", label: "Supabase URL", desc: "Supabase project URL for OAuth sign in" },
+                { key: "NEXT_PUBLIC_SUPABASE_ANON_KEY", label: "Supabase Anon Key", desc: "Public anon key used by Supabase Auth" },
               ].map(({ key, label, desc }) => (
                 <div key={key} className="form-group">
                   <label className="form-label">{label}</label>
@@ -232,7 +234,8 @@ export default function SettingsPage() {
                 {[
                   { title: "AES-256-GCM Encryption", desc: "Page access tokens are encrypted before storing in the database" },
                   { title: "Webhook Signature Validation", desc: "All Meta webhook payloads verified via X-Hub-Signature-256" },
-                  { title: "Session Protection", desc: "All API routes protected with NextAuth session validation" },
+                  { title: "Session Protection", desc: "All API routes accept only authenticated NextAuth or Supabase users" },
+                  { title: "Supabase OAuth", desc: "Google OAuth users are tracked in Supabase Auth and synced into workspaces" },
                   { title: "Bcrypt Password Hashing", desc: "Passwords hashed with bcrypt (cost factor 12)" },
                   { title: "Cooldown DM Protection", desc: "Configurable cooldown prevents spamming the same user" },
                   { title: "Idempotency Keys", desc: "Duplicate webhook events are safely deduplicated" },

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/current-user"
 import { prisma } from "@/lib/prisma"
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const workspace = await prisma.workspace.findFirst({
-    where: { ownerId: session.user.id },
+    where: { ownerId: currentUser.id },
   })
   if (!workspace) return NextResponse.json({ logs: [] })
 

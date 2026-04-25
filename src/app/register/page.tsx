@@ -111,6 +111,34 @@ export default function RegisterPage() {
             </div>
           )}
 
+          <Link
+            href="/api/auth/supabase/login?provider=google"
+            style={{
+              width: "100%",
+              padding: "11px 16px",
+              border: "1.5px solid #E8EAF0",
+              borderRadius: 10,
+              background: "white",
+              color: "#13131A",
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+              fontFamily: "inherit",
+            }}
+          >
+            Continue with Google
+          </Link>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 1, background: "#E8EAF0", flex: 1 }} />
+            <span style={{ fontSize: 11.5, color: "#9CA3AF", fontWeight: 600 }}>or</span>
+            <div style={{ height: 1, background: "#E8EAF0", flex: 1 }} />
+          </div>
+
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
               <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#13131A", marginBottom: 6 }}>

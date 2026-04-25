@@ -27,6 +27,8 @@ Use `.env.local` for local development and Render environment variables for prod
 | `ENCRYPTION_KEY` | Secret used for AES-256-GCM page token encryption |
 | `NEXTAUTH_SECRET` | Secret used by NextAuth |
 | `NEXTAUTH_URL` | App base URL, for example `https://commentflow.onrender.com` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL for Supabase Auth/OAuth |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon public key for Supabase Auth/OAuth |
 
 ## Render Deployment
 
@@ -70,3 +72,17 @@ Never put Meta credentials in code. Add them to `.env.local` locally and to Rend
 - `WEBHOOK_VERIFY_TOKEN`
 
 Facebook Page access tokens should be obtained through the built-in `/api/fb-oauth` flow. They are encrypted before being stored.
+
+## Supabase OAuth
+
+The app supports Supabase Auth with Google OAuth. Configure Google as a provider in Supabase Auth, then add this redirect URL in Supabase:
+
+```bash
+https://YOUR_DEPLOYED_DOMAIN/api/auth/supabase/callback
+```
+
+For local development, also add:
+
+```bash
+http://localhost:3000/api/auth/supabase/callback
+```

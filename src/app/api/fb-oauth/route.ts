@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/current-user"
 
 /**
  * Initiates the Facebook OAuth flow.
  * Redirects user to Facebook's login dialog.
  */
 export async function GET() {
-  const session = await auth()
-  if (!session) {
+  const currentUser = await getCurrentUser()
+  if (!currentUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -37,7 +37,7 @@ export async function GET() {
     redirect_uri: redirectUri,
     scope: scopes,
     response_type: "code",
-    state: session.user?.id ?? "unknown",
+    state: currentUser?.id ?? "unknown",
   })
 
   const fbLoginUrl = `https://www.facebook.com/v19.0/dialog/oauth?${params}`

@@ -1,7 +1,7 @@
 // api/triggers/route.ts — v2: full CRUD with multi-step support
 
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/current-user"
 import { prisma } from "@/lib/prisma"
 
 async function getWorkspaceId(userId: string) {
@@ -12,10 +12,10 @@ async function getWorkspaceId(userId: string) {
 }
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const workspaceId = await getWorkspaceId(session.user.id)
+  const workspaceId = await getWorkspaceId(currentUser.id)
   if (!workspaceId) return NextResponse.json({ triggers: [] })
 
   const triggers = await prisma.trigger.findMany({
@@ -31,10 +31,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const workspaceId = await getWorkspaceId(session.user.id)
+  const workspaceId = await getWorkspaceId(currentUser.id)
   if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 400 })
 
   const { triggerName, keyword, keywordMatchType, cooldownMinutes, pageId, steps } = await req.json()
@@ -70,14 +70,16 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id, isActive, triggerName, keyword, keywordMatchType, cooldownMinutes, steps } = await req.json()
+  const workspaceId = await getWorkspaceId(currentUser.id)
+  if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 400 })
 
   // Update trigger metadata
   await prisma.trigger.update({
-    where: { id },
+    where: { id, workspaceId },
     data: {
       ...(isActive !== undefined && { isActive }),
       ...(triggerName && { triggerName }),
@@ -112,14 +114,16 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
+  const workspaceId = await getWorkspaceId(currentUser.id)
+  if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 400 })
 
-  await prisma.trigger.delete({ where: { id } })
+  await prisma.trigger.delete({ where: { id, workspaceId } })
 
   return NextResponse.json({ success: true })
 }

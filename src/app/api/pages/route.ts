@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/current-user"
 import { prisma } from "@/lib/prisma"
 import { encryptToken } from "@/lib/crypto"
 
@@ -11,10 +11,10 @@ async function getWorkspaceId(userId: string) {
 }
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const workspaceId = await getWorkspaceId(session.user.id)
+  const workspaceId = await getWorkspaceId(currentUser.id)
   if (!workspaceId) return NextResponse.json({ pages: [] })
 
   const pages = await prisma.page.findMany({
@@ -43,10 +43,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const workspaceId = await getWorkspaceId(session.user.id)
+  const workspaceId = await getWorkspaceId(currentUser.id)
   if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 400 })
 
   const { pageName, facebookPageId, pageAccessToken } = await req.json()
@@ -70,13 +70,15 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id, status, permissionsStatus } = await req.json()
+  const workspaceId = await getWorkspaceId(currentUser.id)
+  if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 400 })
 
   const page = await prisma.page.update({
-    where: { id },
+    where: { id, workspaceId },
     data: {
       ...(status && { status }),
       ...(permissionsStatus && { permissionsStatus }),
@@ -87,14 +89,16 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
+  const workspaceId = await getWorkspaceId(currentUser.id)
+  if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 400 })
 
-  await prisma.page.delete({ where: { id } })
+  await prisma.page.delete({ where: { id, workspaceId } })
 
   return NextResponse.json({ success: true })
 }

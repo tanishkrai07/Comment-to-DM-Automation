@@ -12,6 +12,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [oauthError] = useState(() => {
+    if (typeof window === "undefined") return ""
+    return new URLSearchParams(window.location.search).get("error")
+      ? "OAuth sign in failed. Check Supabase OAuth settings and try again."
+      : ""
+  })
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +79,7 @@ export default function LoginPage() {
           padding: 32,
           boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
         }}>
-          {error && (
+          {(error || oauthError) && (
             <div style={{
               padding: "12px 16px",
               background: "#FEF2F2",
@@ -83,9 +89,37 @@ export default function LoginPage() {
               color: "#DC2626",
               marginBottom: 20,
             }}>
-              {error}
+              {error || oauthError}
             </div>
           )}
+
+          <Link
+            href="/api/auth/supabase/login?provider=google"
+            style={{
+              width: "100%",
+              padding: "11px 16px",
+              border: "1.5px solid #E8EAF0",
+              borderRadius: 10,
+              background: "white",
+              color: "#13131A",
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 16,
+              fontFamily: "inherit",
+            }}
+          >
+            Continue with Google
+          </Link>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ height: 1, background: "#E8EAF0", flex: 1 }} />
+            <span style={{ fontSize: 11.5, color: "#9CA3AF", fontWeight: 600 }}>or</span>
+            <div style={{ height: 1, background: "#E8EAF0", flex: 1 }} />
+          </div>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>

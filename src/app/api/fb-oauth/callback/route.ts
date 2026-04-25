@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/current-user"
 import { prisma } from "@/lib/prisma"
 import { exchangeCodeForToken, getUserPages, subscribePageToWebhook } from "@/lib/facebook"
 import { encrypt } from "@/lib/crypto"
@@ -12,8 +12,8 @@ const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000"
  * stores encrypted page tokens in DB.
  */
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) {
     return NextResponse.redirect(`${BASE_URL}/login`)
   }
 
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
   // Get the user's workspace
   const workspace = await prisma.workspace.findFirst({
-    where: { ownerId: session.user.id },
+    where: { ownerId: currentUser.id },
   })
 
   if (!workspace) {
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
     connectedCount++
   }
 
-  console.log(`[FB OAuth] Connected ${connectedCount} page(s) for user ${session.user.id}`)
+  console.log(`[FB OAuth] Connected ${connectedCount} page(s) for user ${currentUser.id}`)
 
   return NextResponse.redirect(
     `${BASE_URL}/pages?connected=${connectedCount}`

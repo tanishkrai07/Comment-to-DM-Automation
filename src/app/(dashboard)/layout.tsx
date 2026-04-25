@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/current-user"
 import { redirect } from "next/navigation"
 import Sidebar from "@/components/sidebar"
 import type { Metadata } from "next"
@@ -13,14 +13,14 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await auth()
-  if (!session) {
+  const currentUser = await getCurrentUser()
+  if (!currentUser) {
     redirect("/login")
   }
 
   return (
     <div className="app-layout">
-      <Sidebar />
+      <Sidebar user={currentUser} />
       <main className="app-main">
         {children}
       </main>

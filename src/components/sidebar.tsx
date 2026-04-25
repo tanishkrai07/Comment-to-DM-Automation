@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { signOut } from "next-auth/react"
 import {
   LayoutDashboard,
   Globe,
@@ -29,9 +29,12 @@ const bottomItems = [
   { href: "/settings", label: "Settings", icon: Settings },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({
+  user,
+}: {
+  user: { name: string | null; email: string; authProvider?: string }
+}) {
   const pathname = usePathname()
-  const { data: session } = useSession()
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
@@ -219,20 +222,23 @@ export default function Sidebar() {
             fontWeight: 700,
             flexShrink: 0,
           }}>
-            {session?.user?.name?.[0]?.toUpperCase() ?? session?.user?.email?.[0]?.toUpperCase() ?? "U"}
+            {user.name?.[0]?.toUpperCase() ?? user.email[0]?.toUpperCase() ?? "U"}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: "#13131A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {session?.user?.name ?? "User"}
+              {user.name ?? "User"}
             </div>
             <div style={{ fontSize: 11, color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {session?.user?.email}
+              {user.email}
             </div>
           </div>
         </div>
 
         <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={async () => {
+            await fetch("/api/auth/supabase/signout", { method: "POST" }).catch(() => undefined)
+            await signOut({ callbackUrl: "/login" })
+          }}
           style={{
             display: "flex",
             alignItems: "center",

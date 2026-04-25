@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/current-user"
 import { processCommentEvent } from "@/lib/trigger-engine"
 import { prisma } from "@/lib/prisma"
 
@@ -8,8 +8,8 @@ import { prisma } from "@/lib/prisma"
  * POST body: { pageId, commentText, commenterId? }
  */
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser()
+  if (!currentUser?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   // Verify the page belongs to the user's workspace
   const workspace = await prisma.workspace.findFirst({
-    where: { ownerId: session.user.id },
+    where: { ownerId: currentUser.id },
   })
 
   const page = await prisma.page.findFirst({
