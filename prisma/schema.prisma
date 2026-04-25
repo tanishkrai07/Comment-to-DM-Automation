@@ -1,0 +1,149 @@
+// CommentFlow v2 — PostgreSQL (Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// Auth
+// ─────────────────────────────────────────
+
+model User {
+  id         String      @id @default(cuid())
+  name       String?
+  email      String      @unique
+  password   String
+  createdAt  DateTime    @default(now())
+  workspaces Workspace[]
+}
+
+// ─────────────────────────────────────────
+// Workspace
+// ─────────────────────────────────────────
+
+model Workspace {
+  id        String    @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  pages     Page[]
+  triggers  Trigger[]
+  createdAt DateTime  @default(now())
+}
+
+// ─────────────────────────────────────────
+// Facebook Pages
+// ─────────────────────────────────────────
+
+model Page {
+  id                       String         @id @default(cuid())
+  workspaceId              String
+  workspace                Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  facebookPageId           String         @unique
+  pageName                 String
+  pageAvatarUrl            String?
+  pageAccessTokenEncrypted String
+  status                   String         @default("active")
+  permissionsStatus        String         @default("ok")
+  triggers                 Trigger[]
+  conversations            Conversation[]
+  events                   Event[]
+  messageLogs              MessageLog[]
+  createdAt                DateTime       @default(now())
+}
+
+// ─────────────────────────────────────────
+// Triggers
+// ─────────────────────────────────────────
+
+model Trigger {
+  id               String        @id @default(cuid())
+  workspaceId      String
+  workspace        Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pageId           String
+  page             Page          @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  triggerName      String
+  keyword          String
+  keywordMatchType String        @default("contains")
+  isActive         Boolean       @default(true)
+  cooldownMinutes  Int           @default(1440)
+  steps            TriggerStep[]
+  events           Event[]
+  conversations    Conversation[]
+  createdAt        DateTime      @default(now())
+}
+
+// ─────────────────────────────────────────
+// Trigger Steps (multi-step DM sequences)
+// ─────────────────────────────────────────
+
+model TriggerStep {
+  id           String   @id @default(cuid())
+  triggerId    String
+  trigger      Trigger  @relation(fields: [triggerId], references: [id], onDelete: Cascade)
+  stepOrder    Int
+  message      String
+  delaySeconds Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// Conversations
+// ─────────────────────────────────────────
+
+model Conversation {
+  id               String       @id @default(cuid())
+  pageId           String
+  page             Page         @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  triggerId        String?
+  trigger          Trigger?     @relation(fields: [triggerId], references: [id])
+  userPlatformId   String
+  currentStep      Int          @default(1)
+  lastCommentText  String?
+  lastDmSentAt     DateTime?
+  isComplete       Boolean      @default(false)
+  messageLogs      MessageLog[]
+  createdAt        DateTime     @default(now())
+
+  @@unique([pageId, userPlatformId, triggerId])
+}
+
+// ─────────────────────────────────────────
+// Events (every webhook hit)
+// ─────────────────────────────────────────
+
+model Event {
+  id              String   @id @default(cuid())
+  pageId          String
+  page            Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  triggerId       String?
+  trigger         Trigger? @relation(fields: [triggerId], references: [id])
+  eventType       String
+  rawPayload      String?
+  processedStatus String   @default("pending")
+  errorMessage    String?
+  idempotencyKey  String?  @unique
+  createdAt       DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// Message Logs
+// ─────────────────────────────────────────
+
+model MessageLog {
+  id                String        @id @default(cuid())
+  pageId            String
+  page              Page          @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  conversationId    String?
+  conversation      Conversation? @relation(fields: [conversationId], references: [id])
+  messageText       String
+  deliveryStatus    String        @default("sent")
+  providerMessageId String?
+  retryCount        Int           @default(0)
+  stepNumber        Int           @default(1)
+  createdAt         DateTime      @default(now())
+}
