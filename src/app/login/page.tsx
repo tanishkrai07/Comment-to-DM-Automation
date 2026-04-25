@@ -14,9 +14,15 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [oauthError] = useState(() => {
     if (typeof window === "undefined") return ""
-    return new URLSearchParams(window.location.search).get("error")
-      ? "OAuth sign in failed. Check Supabase OAuth settings and try again."
-      : ""
+    const errorCode = new URLSearchParams(window.location.search).get("error")
+    const messages: Record<string, string> = {
+      supabase_not_configured: "Supabase env vars are missing in Vercel. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+      oauth_start_failed: "Google OAuth could not start. Check the Google Client ID and Client Secret in Supabase.",
+      oauth_callback_failed: "OAuth callback did not include a code. Check Supabase redirect URL configuration.",
+      oauth_exchange_failed: "OAuth code exchange failed. Check Supabase Site URL, redirect URLs, and Google authorized redirect URI.",
+      oauth_email_missing: "Google did not return an email address. Use an account with email access enabled.",
+    }
+    return errorCode ? messages[errorCode] ?? `OAuth sign in failed: ${errorCode}` : ""
   })
   const router = useRouter()
 

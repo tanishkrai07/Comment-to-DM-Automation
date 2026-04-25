@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
   })
 
   if (error || !data.url) {
+    console.error("[supabase-oauth-start]", error)
     return NextResponse.redirect(`${origin}/login?error=oauth_start_failed`)
   }
 
